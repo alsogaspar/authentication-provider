@@ -11,4 +11,14 @@ entries:
     urls:
     - https://github.com/alsogaspar/authentication-provider/releases/download/authentication-provider-1.3.6/authentication-provider-1.3.6.tgz
     version: 1.3.6
-generated: "2025-09-30T14:30:23.57479118Z"
+  - apiVersion: v2
+    appVersion: 1.3.4
+    created: "2025-09-30T14:52:34.829945738Z"
+    description: A Helm chart for Kubernetes (custom)
+    digest: 030d19d31ad438ef4c52b7d3fcd1a58e2019087c9cb57b4c51662f2f493d9682
+    name: authentication-provider
+    type: application
+    urls:
+    - https://github.com/alsogaspar/authentication-provider/releases/download/authentication-provider-1.3.4/authentication-provider-1.3.4.tgz
+    version: 1.3.4
+generated: "2025-09-30T14:52:34.829953853Z"
