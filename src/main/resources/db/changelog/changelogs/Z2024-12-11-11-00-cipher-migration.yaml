@@ -1,0 +1,10 @@
+
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: Lorenzo Gandino
+      validCheckSum: 9:d41e6effba2b87860433182d9e3c1692
+      objectQuotingStrategy: LEGACY
+      changes:
+        - customChange:
+            class: eu.europa.ec.simpl.authenticationprovider.liquibase.migration_2024_12_11.CipherMigration

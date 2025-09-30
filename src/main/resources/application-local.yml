@@ -1,0 +1,65 @@
+spring:
+  data:
+    redis:
+      host: localhost
+      username: default
+      password: admin
+  datasource:
+    url: jdbc:postgresql://localhost:5432/authenticationprovider
+    username: authenticationprovider
+    password: authenticationprovider
+  jpa:
+    properties:
+      hibernate:
+        generate_statistics: false
+        format_sql: true
+  kafka:
+    bootstrap-servers: localhost:9092
+
+
+logging:
+  config: classpath:log4j2-local.xml
+  level:
+    eu:
+      europa:
+        ec:
+          simpl: DEBUG
+
+microservice:
+  users-roles:
+    url: "http://localhost:8081"
+
+crypto:
+  secretKeyBase64: "pvONfhxMFVkqJo/my2+omhN94UqiK+pHWhTI6FJ4gjQ="
+
+simpl:
+  certificate:
+    san: "t2.authority.dev.aruba-simpl.cloud"
+  kafka:
+    topic:
+      prefix: iaa.iaa-dsdev-consumer.
+
+keypair:
+  signature-algorithm: "SHA256withECDSA"
+  algorithm: "ECDSA"
+  key-length: 256
+
+client:
+  authority:
+    url: https://t2.iaa-dsdev-authority.dev.simpl-europe.eu
+server:
+  port: 8085
+
+security:
+  secret:
+    location: database
+
+# Uncomment the following lines to enable Vault for location management
+# vault:
+#   uri: http://localhost:8200
+#   secretEngine: location
+#   basePath: authenticationprovider
+#   authentication:
+#     path: approle
+#     roleId: e186e224-4554-8b3f-8f9f-dac3a76facd4
+#     secretId: 26e68ba6-086b-c99c-bb5d-c659041cd5dc

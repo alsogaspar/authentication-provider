@@ -1,0 +1,90 @@
+spring:
+  config:
+    import:
+      - classpath:config/kafka.yml
+      - classpath:config/vault.yml
+  data:
+    redis:
+      host: [REDIS_HOST]
+      port: 6379
+      username: [REDIS_USERNAME]
+      password: [REDIS_PASSWORD]
+  datasource:
+    url: [POSTGRES_URL]
+    username: [POSTGRES_USER]
+    password: [POSTGRES_PASSWORD]
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 100
+        order_inserts: true
+        order_updates: true
+    show-sql: true
+  jackson:
+    default-property-inclusion: NON_NULL
+
+microservice:
+  users-roles:
+    url: [USER_ROLES_URL]
+
+management:
+  info:
+    git:
+      enabled: true
+    build:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  http:
+    enabled: true
+    excluded:
+      - method: GET
+        path: /actuator/health/readiness
+      - method: GET
+        path: /actuator/health/liveness
+  aspect:
+    component:
+      enabled: true
+      level: INFO
+    controller:
+      enabled: true
+      level: INFO
+    repository:
+      enabled: true
+      level: DEBUG
+    service:
+      enabled: true
+      level: INFO
+
+simpl:
+  certificate:
+    san: [SIMPL_CERTIFICATE_SAN]
+
+
+keypair:
+  signature-algorithm: [KEYPAIR_SIGNATURE_ALGORITHM]
+  algorithm: [KEYPAIR_ALGORITHM]
+  key-length: 256
+
+crypto:
+  secret-key-base64: [CRYPTO_SECRET_KEY_BASE64]
+
+client:
+  authority:
+    url: [CLIENT_AUTHORITY_URL]
+
+security:
+  secret:
+    location: database

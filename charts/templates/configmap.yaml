@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-configmap
+data:
+  SPRING_CONFIG_IMPORT: {{ .Values.extraConfigImport | quote }}
+  SPRING_PROFILES_ACTIVE: {{ .Values.profile | quote }}
+
+  SPRING_DATASOURCE_URL: {{ tpl .Values.db.url . | quote }}
+  SPRING_DATASOURCE_USERNAME: {{ .Values.db.username | quote }}
+  SPRING_DATASOURCE_PASSWORD: {{ .Values.db.password | quote }}
+
+  SPRING_DATA_REDIS_HOST: {{ tpl .Values.redis.host . | quote }}
+  SPRING_DATA_REDIS_PORT: {{ .Values.redis.port | quote }}
+  SPRING_DATA_REDIS_USERNAME: {{ .Values.redis.username | quote }}
+  SPRING_DATA_REDIS_PASSWORD: {{ .Values.redis.password | quote }}
+
+  KEYPAIR_ALGORITHM: {{ .Values.keypair.algorithm | quote }}
+  KEYPAIR_SIGNATURE_ALGORITHM: {{ .Values.keypair.signatureAlgorithm | quote }}
+  KEYPAIR_KEY_LENGTH: {{ .Values.keypair.keyLength | quote }}
+
+  MICROSERVICE_USERSROLES_URL: {{ tpl .Values.microservices.usersRolesUrl . | quote }}
+
+{{- if eq .Values.profile "authority" }}
+  MICROSERVICE_IDENTITY_PROVIDER_URL: {{ tpl .Values.microservices.identityProviderUrl . | quote }}
+{{- end }}
+
+  SIMPL_CERTIFICATE_SAN: {{ tpl .Values.simpl.certificate.san . | quote }}
+
+  CLIENT_AUTHORITY_URL: {{ tpl .Values.urlAuthorityT2 . | quote }}
+
+  SECURITY_SECRET_LOCATION: {{ .Values.security.location | quote }}
+
+  {{- if .Values.devMode  }}
+  LOGGING_CONFIG: classpath:log4j2-local.xml
+  {{- end }}

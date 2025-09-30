@@ -1,0 +1,8 @@
+vault:
+  uri: [VAULT_URI]
+  secretEngine: secret
+  basePath: [VAULT_BASE_PATH]
+  authentication:
+    path: approle
+    roleId: [VAULT_AUTHENTICATION_ROLE_ID]
+    secretId: [VAULT_AUTHENTICATION_SECRET_ID]

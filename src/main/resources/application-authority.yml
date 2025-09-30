@@ -1,0 +1,4 @@
+microservice:
+  identity-provider:
+    url: "http://localhost:8082"
+

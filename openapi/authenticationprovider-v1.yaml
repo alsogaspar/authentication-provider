@@ -1,0 +1,1208 @@
+openapi: 3.0.1
+info:
+  description: OpenAPI definition for the Authentication Provider component of the
+    SIMPL project
+  license:
+    name: European Union Public License (EUPL) 1.2
+    url: https://interoperable-europe.ec.europa.eu/sites/default/files/custom-page/attachment/eupl_v1.2_en.pdf
+  title: Authentication Provider OpenAPI definition
+  version: 1.3.0
+servers:
+- description: authenticationprovider
+  url: /v1
+tags:
+- description: API for managing Keypairs
+  name: Keypairs
+- description: API for managing Certificate Sign Requests
+  name: Certificate Sign Requests
+- description: API for retrieving information about the running application
+  name: Application Info
+paths:
+  /keypairs:
+    get:
+      description: ONBOARDER_M user get the public/private Key Pair
+      operationId: getInstalledKeyPair
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyPair'
+          description: Key Pair successfully retrieved. The response body contains
+            the details of the requested KeyPair.
+        "401":
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+          description: Unauthorized
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+          description: Key Pair not found. The requested KeyPair does not exist or
+            is not accessible.
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+          description: Conflict
+      security:
+      - oauth2ClientCredentials: []
+      summary: Get installed Key Pair
+      tags:
+      - Keypairs
+    head:
+      description: ONBOARDER_M checks whether a public/private Key Pair is stored
+        in the database
+      operationId: existsKeypair
+      responses:
+        "200":
+          description: KeyPair is present
+        "401":
+          description: Unauthorized
+        "404":
+          description: KeyPair is not present
+      security:
+      - oauth2AuthCode: []
+      summary: Keypair Exists
+      tags:
+      - Keypairs
+      x-simpl-roles:
+      - ONBOARDER_M
+    post:
+      description: ONBOARDER_M user import a public/private Key Pair and store it
+        to database
+      operationId: importKeyPair
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportKeyPair'
+        required: true
+      responses:
+        "204":
+          description: Key Pair generate and stored successfully
+        "401":
+          description: Unauthorized
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+          description: Conflict
+      security:
+      - oauth2AuthCode: []
+      summary: Import Key Pair
+      tags:
+      - Keypairs
+      x-simpl-roles:
+      - ONBOARDER_M
+  /keypairs/generate:
+    post:
+      description: ONBOARDER_M user generate a public/private Key Pair and store it
+        to database
+      operationId: generateKeyPair
+      responses:
+        "204":
+          description: Key Pair generate and stored successfully
+        "401":
+          description: Unauthorized
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+          description: Conflict
+      security:
+      - oauth2AuthCode: []
+      summary: Generate Key Pair
+      tags:
+      - Keypairs
+      x-simpl-roles:
+      - ONBOARDER_M
+  /csr/generate:
+    post:
+      description: Generates the CSR for the applicant participant
+      operationId: generateCSR
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistinguishedName'
+        required: true
+      responses:
+        "200":
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
+          description: OK
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+          description: Conflict
+      security:
+      - oauth2AuthCode: []
+      summary: Generates the CSR for the applicant participant
+      tags:
+      - Certificate Sign Requests
+      x-simpl-roles:
+      - APPLICANT
+  /agent/ping:
+    get:
+      description: Pings a participant using the provided FQDN and returns identity
+        attributes
+      operationId: pingAgent
+      parameters:
+      - description: Fully Qualified Domain Name of the participant
+        explode: true
+        in: query
+        name: fqdn
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantWithIdentityAttributes'
+          description: Successfully pinged the participant
+        "400":
+          description: Invalid FQDN provided
+      security:
+      - oauth2AuthCode: []
+      summary: Ping a participant
+      tags:
+      - Agents
+  /agent/identityAttributes:
+    get:
+      description: Returns a list of identity attributes with ownership details
+      operationId: getIdentityAttributesWithOwnership
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/IdentityAttributeWithOwnership'
+                type: array
+          description: Successfully retrieved identity attributes with ownership
+        "401":
+          description: Access denied
+        "403":
+          description: "Forbidden: User does not have the required role"
+      security:
+      - oauth2AuthCode: []
+      summary: Get identity attributes with ownership
+      tags:
+      - Agents
+      x-simpl-roles:
+      - T1UAR_M
+  /agent/identityAttributes/{credentialId}:
+    get:
+      description: Returns a list of identity attributes with ownership details
+      operationId: getParticipantIdentityAttributes
+      parameters:
+      - explode: false
+        in: path
+        name: credentialId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/IdentityAttribute'
+                type: array
+          description: Successfully retrieved identity attributes with ownership
+        "401":
+          description: Access denied
+        "403":
+          description: "Forbidden: User does not have the required role"
+      security:
+      - oauth2AuthCode: []
+      summary: Get identity attributes with ownership
+      tags:
+      - Agents
+      x-simpl-roles:
+      - T1UAR_M
+  /agent/echo:
+    get:
+      description: Returns echo information including connection and MTLS status
+      operationId: echo
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Echo'
+          description: Successfully retrieved echo information
+      security:
+      - oauth2AuthCode: []
+      summary: Get echo information
+      tags:
+      - Agents
+  /agent/ephemeralProof:
+    get:
+      description: Request an ephemeral proof from the authority that can be used
+        to connect with other agents into the dataspace
+      operationId: requestEphemeralProofFromAuthority
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: The Dataspace Governance Authority successfully issued an ephemeral
+            proof to this agent
+      summary: Request ephemeral proof authority
+      tags:
+      - Agents
+  /agent/credentials/validate:
+    post:
+      description: Checks if a counterpart credentials is valid in the Dataspace
+      operationId: validateCredential
+      requestBody:
+        content:
+          application/x-pem-file:
+            schema:
+              description: The credential (x.509 certificate in PEM format)
+              example: |
+                -----BEGIN CERTIFICATE-----
+                MIIC+TCCAmKgAwIBAgIBADANBgkqhkiG9w0BAQUFADCB...
+                -----END CERTIFICATE-----
+              type: string
+        required: true
+      responses:
+        "204":
+          description: Certificate is valid.
+        "400":
+          content:
+            application/problem+json:
+              examples:
+                invalidCredential:
+                  description: 'Generic error stating that the credential is not valid. '
+                  summary: Invalid Credential
+                  value:
+                    type: /error/invalid-credential
+                revoked:
+                  description: The credential is valid but has been revoked (e.g.
+                    OCSP revocation for x.509 certificates)
+                  summary: Credential Revoked
+                  value:
+                    type: /error/credential-revoked
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+          description: Invalid certificate
+      summary: Validates a counterpart credential
+      tags:
+      - Agents
+  /credentials:
+    delete:
+      description: Deletes the existing credential from the server
+      operationId: delete
+      responses:
+        "204":
+          description: Successfully deleted credential
+        "404":
+          description: Credential not found
+      security:
+      - oauth2AuthCode: []
+      summary: Delete the credential
+      tags:
+      - Credentials
+      x-simpl-roles:
+      - ONBOARDER_M
+    get:
+      description: "Returns the public participant's credentials' information, i.e.\
+        \ the participant id, the credential id and the public key"
+      operationId: getCredential
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Credential'
+          description: Successfully retrieve credential information
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+          description: Successfully checked credential presence
+      security:
+      - oauth2AuthCode: []
+      summary: Replaces hasCredential. Returns the participant's credentials' information.
+      tags:
+      - Credentials
+    post:
+      description: Uploads a credential file to the server and returns the ID of the
+        uploaded credential
+      operationId: uploadCredential
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/uploadCredential_request'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                description: The id of the uploaded credential
+                example: 12345
+                type: integer
+          description: Successfully uploaded credential
+        "400":
+          description: Invalid file format
+      security:
+      - oauth2AuthCode: []
+      summary: Upload a credential file
+      tags:
+      - Credentials
+      x-simpl-roles:
+      - ONBOARDER_M
+  /credentials/publicKey:
+    get:
+      deprecated: true
+      description: Fetches the public key associated with the stored credential
+      operationId: getPublicKey
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Credential'
+          description: Successfully retrieved public key
+        "404":
+          description: Credential not found
+      summary: Use GET /credentials
+      tags:
+      - Credentials
+  /credentials/myId:
+    get:
+      deprecated: true
+      description: Fetches the participant ID associated with the current participant
+      operationId: getMyParticipantId
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participant'
+          description: Successfully retrieved participant ID
+        "404":
+          description: Credential not found
+      security:
+      - oauth2ClientCredentials: []
+      summary: Use GET /credentials
+      tags:
+      - Credentials
+  /credentials/download:
+    get:
+      description: Download the participant's credential
+      operationId: downloadInstalledCredentials
+      responses:
+        "200":
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
+          description: OK
+      security:
+      - oauth2AuthCode: []
+      summary: Download the participant's credential
+      tags:
+      - Credentials
+  /credentials/credentialId:
+    get:
+      deprecated: true
+      description: Fetches the credential ID associated with the current participant
+      operationId: getCredentialId
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participant'
+          description: Successfully retrieved credential ID
+        "404":
+          description: Credential not found
+      security:
+      - oauth2ClientCredentials: []
+      summary: Use GET /credentials
+      tags:
+      - Credentials
+  /mtls/ping:
+    get:
+      description: Performs a ping operation to check the participant's status using
+        its credential id
+      operationId: ping
+      parameters:
+      - description: The Public Key Hash of the participant
+        explode: false
+        in: header
+        name: Credential-Id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantWithIdentityAttributes'
+          description: Successfully pinged the participant
+        "404":
+          description: Participant not found
+      security:
+      - mtls: []
+      summary: Ping the participant
+      tags:
+      - Mtls
+  /mtls/ephemeralProof:
+    post:
+      description: Stores the ephemeral proof for a participant identified by their
+        UUID
+      operationId: storeCallerEphemeralProof
+      parameters:
+      - description: The Public Key Hash of the participant
+        explode: false
+        in: header
+        name: Credential-Id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+        description: The ephemeral proof to be stored
+        required: true
+      responses:
+        "200":
+          description: Ephemeral proof successfully stored
+        "400":
+          description: Invalid input data
+        "404":
+          description: Participant not found
+      security:
+      - mtls: []
+      summary: Store Ephemeral Proof
+      tags:
+      - Mtls
+  /sessions/credentials:
+    post:
+      description: Validate the tier one session against the ephemeral proof stored
+        in the agent
+      operationId: validateTierOneSession
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TierOneSession'
+        required: true
+      responses:
+        "204":
+          description: Tier 1 session validated successfully
+        "422":
+          description: Invalid Tier 1 session
+      security:
+      - oauth2ClientCredentials: []
+      summary: Validate Tier 1 session
+      tags:
+      - Sessions
+  /sessions/identityAttributes:
+    get:
+      description: Fetches the identity attributes associated with the specified participant
+        ID
+      operationId: getIdentityAttributesOfParticipant
+      parameters:
+      - description: The Public Key Hash of the participant
+        explode: false
+        in: query
+        name: credentialId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/IdentityAttribute'
+                type: array
+          description: Successfully retrieved identity attributes
+        "404":
+          description: Ephemeral proof not found
+      security:
+      - oauth2ClientCredentials: []
+      summary: Retrieve identity attributes of a participant
+      tags:
+      - Sessions
+  /identityAttributes:
+    get:
+      description: Searches for identity attributes with ownership based on the provided
+        filter and pagination settings
+      operationId: searchIdentityAttributesWithOwnership
+      parameters:
+      - description: Zero-based page index (0..N)
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          minimum: 0
+          type: integer
+        style: form
+      - description: The size of the page to be returned
+        explode: true
+        in: query
+        name: size
+        required: false
+        schema:
+          default: 10
+          minimum: 1
+          type: integer
+        style: form
+      - description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+        explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          default:
+          - "id,ASC"
+          items:
+            type: string
+          type: array
+        style: form
+      - in: query
+        name: filter
+        schema:
+          $ref: '#/components/schemas/searchIdentityAttributesWithOwnership_filter_parameter'
+        x-parameter-object: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedModelIdentityAttributeWithOwnership'
+          description: Successfully retrieved the identity attributes
+        "401":
+          description: Access denied
+        "403":
+          description: "Forbidden: User does not have the required role"
+      security:
+      - oauth2AuthCode: []
+      summary: Search identity attributes with ownership
+      tags:
+      - Identity Attributes
+      x-simpl-roles:
+      - T1UAR_M
+      - NOTARY
+      - IATTR_M
+      - NOTARY
+  /info/version:
+    get:
+      description: Retrieve information about the version of the running application
+      operationId: version
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationVersion'
+          description: Version information returned successfully
+      security:
+      - oauth2AuthCode: []
+      summary: Retrieve information about the version of the running application
+      tags:
+      - Application Info
+components:
+  schemas:
+    ProblemDetail:
+      example:
+        instance: https://openapi-generator.tech
+        detail: detail
+        type: https://openapi-generator.tech
+        title: title
+        properties:
+          key: "{}"
+        status: 0
+      properties:
+        type:
+          format: uri
+          type: string
+        title:
+          type: string
+        status:
+          format: int32
+          type: integer
+        detail:
+          type: string
+        instance:
+          format: uri
+          type: string
+        properties:
+          additionalProperties:
+            type: object
+          type: object
+      type: object
+    ImportKeyPair:
+      example:
+        privateKey: privateKey
+        publicKey: publicKey
+      properties:
+        publicKey:
+          type: string
+        privateKey:
+          type: string
+      required:
+      - privateKey
+      - publicKey
+      type: object
+    KeyPair:
+      example:
+        privateKey: privateKey
+        publicKey: publicKey
+      properties:
+        publicKey:
+          format: byte
+          type: string
+        privateKey:
+          format: byte
+          type: string
+      type: object
+    StreamingResponseBody:
+      type: object
+    DistinguishedName:
+      example:
+        commonName: commonName
+        country: country
+        organization: organization
+        organizationalUnit: organizationalUnit
+      properties:
+        commonName:
+          type: string
+        organization:
+          type: string
+        organizationalUnit:
+          type: string
+        country:
+          type: string
+      required:
+      - commonName
+      - country
+      - organization
+      - organizationalUnit
+      type: object
+    ParticipantWithIdentityAttributes:
+      example:
+        expiryDate: 2000-01-23T04:56:07.000+00:00
+        organization: organization
+        participantType: participantType
+        creationTimestamp: 2000-01-23T04:56:07.000+00:00
+        credentialId: credentialId
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        identityAttributes:
+        - code: code
+          name: name
+          creationTimestamp: 2000-01-23T04:56:07.000+00:00
+          description: description
+          assignableToRoles: true
+          participantTypes:
+          - participantTypes
+          - participantTypes
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          used: true
+          enabled: true
+          updateTimestamp: 2000-01-23T04:56:07.000+00:00
+        - code: code
+          name: name
+          creationTimestamp: 2000-01-23T04:56:07.000+00:00
+          description: description
+          assignableToRoles: true
+          participantTypes:
+          - participantTypes
+          - participantTypes
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          used: true
+          enabled: true
+          updateTimestamp: 2000-01-23T04:56:07.000+00:00
+        updateTimestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          format: uuid
+          type: string
+        participantType:
+          type: string
+        organization:
+          type: string
+        creationTimestamp:
+          format: date-time
+          type: string
+        updateTimestamp:
+          format: date-time
+          type: string
+        credentialId:
+          type: string
+        expiryDate:
+          format: date-time
+          type: string
+        identityAttributes:
+          items:
+            $ref: '#/components/schemas/IdentityAttribute'
+          type: array
+      required:
+      - organization
+      - participantType
+      type: object
+    IdentityAttributeWithOwnership:
+      example:
+        code: code
+        assignedToParticipant: true
+        name: name
+        creationTimestamp: 2000-01-23T04:56:07.000+00:00
+        description: description
+        assignableToRoles: true
+        participantTypes:
+        - participantTypes
+        - participantTypes
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        used: true
+        enabled: true
+        updateTimestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          format: uuid
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        assignableToRoles:
+          type: boolean
+        enabled:
+          type: boolean
+        creationTimestamp:
+          format: date-time
+          type: string
+        updateTimestamp:
+          format: date-time
+          type: string
+        participantTypes:
+          items:
+            type: string
+          type: array
+          uniqueItems: true
+        used:
+          readOnly: true
+          type: boolean
+        assignedToParticipant:
+          type: boolean
+      required:
+      - assignableToRoles
+      - code
+      - enabled
+      - name
+      type: object
+    IdentityAttribute:
+      example:
+        code: code
+        name: name
+        creationTimestamp: 2000-01-23T04:56:07.000+00:00
+        description: description
+        assignableToRoles: true
+        participantTypes:
+        - participantTypes
+        - participantTypes
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        used: true
+        enabled: true
+        updateTimestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          format: uuid
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        assignableToRoles:
+          type: boolean
+        enabled:
+          type: boolean
+        creationTimestamp:
+          format: date-time
+          type: string
+        updateTimestamp:
+          format: date-time
+          type: string
+        participantTypes:
+          items:
+            type: string
+          type: array
+          uniqueItems: true
+        used:
+          readOnly: true
+          type: boolean
+      required:
+      - assignableToRoles
+      - code
+      - enabled
+      - name
+      type: object
+    Echo:
+      example:
+        mtlsStatus: SECURED
+        participantType: participantType
+        userIdentityAttributes:
+        - userIdentityAttributes
+        - userIdentityAttributes
+        identityAttributes:
+        - code: code
+          name: name
+          creationTimestamp: 2000-01-23T04:56:07.000+00:00
+          description: description
+          assignableToRoles: true
+          participantTypes:
+          - participantTypes
+          - participantTypes
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          used: true
+          enabled: true
+          updateTimestamp: 2000-01-23T04:56:07.000+00:00
+        - code: code
+          name: name
+          creationTimestamp: 2000-01-23T04:56:07.000+00:00
+          description: description
+          assignableToRoles: true
+          participantTypes:
+          - participantTypes
+          - participantTypes
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          used: true
+          enabled: true
+          updateTimestamp: 2000-01-23T04:56:07.000+00:00
+        updateTimestamp: 2000-01-23T04:56:07.000+00:00
+        expiryDate: 2000-01-23T04:56:07.000+00:00
+        organization: organization
+        connectionStatus: CONNECTED
+        creationTimestamp: 2000-01-23T04:56:07.000+00:00
+        credentialId: credentialId
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        email: email
+        username: username
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        connectionStatus:
+          $ref: '#/components/schemas/ConnectionStatus'
+        mtlsStatus:
+          $ref: '#/components/schemas/MTLSStatus'
+        userIdentityAttributes:
+          items:
+            type: string
+          type: array
+        id:
+          format: uuid
+          type: string
+        participantType:
+          type: string
+        organization:
+          type: string
+        creationTimestamp:
+          format: date-time
+          type: string
+        updateTimestamp:
+          format: date-time
+          type: string
+        credentialId:
+          type: string
+        expiryDate:
+          format: date-time
+          type: string
+        identityAttributes:
+          items:
+            $ref: '#/components/schemas/IdentityAttribute'
+          type: array
+      required:
+      - organization
+      - participantType
+      type: object
+    Credential:
+      example:
+        participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        credentialId: credentialId
+        publicKey: publicKey
+      properties:
+        publicKey:
+          type: string
+        credentialId:
+          type: string
+        participantId:
+          format: uuid
+          type: string
+      type: object
+    Participant:
+      example:
+        expiryDate: 2000-01-23T04:56:07.000+00:00
+        organization: organization
+        participantType: participantType
+        creationTimestamp: 2000-01-23T04:56:07.000+00:00
+        credentialId: credentialId
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        updateTimestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          format: uuid
+          type: string
+        participantType:
+          type: string
+        organization:
+          type: string
+        creationTimestamp:
+          format: date-time
+          type: string
+        updateTimestamp:
+          format: date-time
+          type: string
+        credentialId:
+          type: string
+        expiryDate:
+          format: date-time
+          type: string
+      required:
+      - organization
+      - participantType
+      type: object
+    TierOneSession:
+      example:
+        jwt: jwt
+      properties:
+        jwt:
+          type: string
+      required:
+      - jwt
+      type: object
+    PagedModelIdentityAttributeWithOwnership:
+      example:
+        page:
+          number: 6
+          size: 0
+          totalPages: 5
+          totalElements: 1
+        content:
+        - code: code
+          assignedToParticipant: true
+          name: name
+          creationTimestamp: 2000-01-23T04:56:07.000+00:00
+          description: description
+          assignableToRoles: true
+          participantTypes:
+          - participantTypes
+          - participantTypes
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          used: true
+          enabled: true
+          updateTimestamp: 2000-01-23T04:56:07.000+00:00
+        - code: code
+          assignedToParticipant: true
+          name: name
+          creationTimestamp: 2000-01-23T04:56:07.000+00:00
+          description: description
+          assignableToRoles: true
+          participantTypes:
+          - participantTypes
+          - participantTypes
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          used: true
+          enabled: true
+          updateTimestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        content:
+          items:
+            $ref: '#/components/schemas/IdentityAttributeWithOwnership'
+          type: array
+        page:
+          $ref: '#/components/schemas/PageMetadata'
+      type: object
+    ApplicationVersion:
+      example:
+        git:
+          commit:
+            id: id
+            time: time
+          branch: branch
+        build:
+          artifact: artifact
+          name: name
+          time: time
+          version: version
+          group: group
+      properties:
+        git:
+          $ref: '#/components/schemas/ApplicationVersion_git'
+        build:
+          $ref: '#/components/schemas/ApplicationVersion_build'
+      required:
+      - build
+      - git
+      type: object
+    ConnectionStatus:
+      enum:
+      - CONNECTED
+      - NOT_CONNECTED
+      type: string
+    MTLSStatus:
+      enum:
+      - SECURED
+      - NOT_SECURED
+      type: string
+    PageMetadata:
+      example:
+        number: 6
+        size: 0
+        totalPages: 5
+        totalElements: 1
+      properties:
+        size:
+          format: int64
+          type: integer
+        number:
+          format: int64
+          type: integer
+        totalElements:
+          format: int64
+          type: integer
+        totalPages:
+          format: int64
+          type: integer
+      type: object
+    uploadCredential_request:
+      properties:
+        credential:
+          format: binary
+          type: string
+      required:
+      - credential
+      type: object
+    searchIdentityAttributesWithOwnership_filter_parameter:
+      properties:
+        code:
+          type: string
+        participantTypeIn:
+          type: string
+        updateTimestampFrom:
+          format: date-time
+          type: string
+        assignedToParticipant:
+          type: boolean
+        name:
+          type: string
+        updateTimestampTo:
+          format: date-time
+          type: string
+        enabled:
+          type: boolean
+        participantTypeNotIn:
+          type: string
+      type: object
+    ApplicationVersion_git_commit:
+      example:
+        id: id
+        time: time
+      properties:
+        id:
+          type: string
+        time:
+          type: string
+      required:
+      - id
+      - time
+      type: object
+    ApplicationVersion_git:
+      example:
+        commit:
+          id: id
+          time: time
+        branch: branch
+      properties:
+        branch:
+          type: string
+        commit:
+          $ref: '#/components/schemas/ApplicationVersion_git_commit'
+      required:
+      - branch
+      - commit
+      type: object
+    ApplicationVersion_build:
+      example:
+        artifact: artifact
+        name: name
+        time: time
+        version: version
+        group: group
+      properties:
+        artifact:
+          type: string
+        name:
+          type: string
+        time:
+          type: string
+        version:
+          type: string
+        group:
+          type: string
+      required:
+      - artifact
+      - group
+      - name
+      - time
+      - version
+      type: object
+  securitySchemes:
+    mtls:
+      description: SIMPL mTLS
+      scheme: http
+      type: http
+    oauth2AuthCode:
+      flows:
+        authorizationCode:
+          authorizationUrl: ""
+          scopes: {}
+          tokenUrl: ""
+      type: oauth2
+    oauth2ClientCredentials:
+      flows:
+        clientCredentials:
+          scopes: {}
+          tokenUrl: ""
+      type: oauth2
